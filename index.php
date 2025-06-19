@@ -2,16 +2,11 @@
 session_start();
 require_once 'config/database.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: taikhoan/login.php");
-    exit();
-}
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+$role = isset($_SESSION['role']) ? $_SESSION['role'] : 'user';
 
-$user_id = $_SESSION['user_id'];
-$role = $_SESSION['role'];
-
-$stmt = $pdo->prepare("SELECT * FROM musics WHERE uploaded_by = ?");
-$stmt->execute([$user_id]);
+$stmt = $pdo->prepare("SELECT * FROM musics");
+$stmt->execute();
 $musics = $stmt->fetchAll();
 ?>
 
@@ -24,7 +19,7 @@ $musics = $stmt->fetchAll();
         .player { width: 100%; max-width: 600px; margin: 20px auto; }
         audio { width: 100%; }
         .controls { margin-top: 10px; }
-        .upload { display: <?php echo $role == 'admin' ? 'block' : 'none'; ?>; }
+        .upload { display: <?php echo ($user_id && $role == 'admin') ? 'block' : 'none'; ?>; }
         .auth-buttons { margin: 10px 0; }
     </style>
 </head>
@@ -51,10 +46,14 @@ $musics = $stmt->fetchAll();
         </form>
     </div>
 
-    <?php if (isset($_SESSION['user_id'])): ?>
+    <?php if ($user_id): ?>
         <form method="post" action="taikhoan/logout.php">
             <button type="submit">Đăng xuất</button>
         </form>
+    <?php else: ?>
+        <div class="auth-buttons">
+            <a href="taikhoan/login.php">Đăng nhập</a> | <a href="taikhoan/register.php">Đăng ký</a>
+        </div>
     <?php endif; ?>
 
     <script>
