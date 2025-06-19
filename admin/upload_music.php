@@ -14,23 +14,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $cover_image_url = $_POST['cover_image_url'] ?? null;
     $file = $_FILES['musicFile'];
 
-    // Tạo thư mục theo tên bài hát
+    // Tạo thư mục theo tên bài hát trong admin/upload
     $sanitized_title = preg_replace('/[^A-Za-z0-9\-]/', '_', $title);
-    $music_dir = 'upload/' . $sanitized_title;
-    if (!file_exists($music_dir)) {
-        mkdir($music_dir, 0775, true);
+    $music_dir = 'upload/' . $sanitized_title; // Tương đối từ admin/
+    $full_music_dir = $_SERVER['DOCUMENT_ROOT'] . '/admin/' . $music_dir;
+    if (!file_exists($full_music_dir)) {
+        mkdir($full_music_dir, 0777, true); // Quyền 0777 cho XAMPP
     }
 
     // Lưu file nhạc
-    $file_path = $music_dir . '/' . uniqid() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
-    move_uploaded_file($file['tmp_name'], $file_path);
+    $file_name = uniqid() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+    $file_path = $music_dir . '/' . $file_name; // Đường dẫn tương đối
+    $full_file_path = $_SERVER['DOCUMENT_ROOT'] . '/admin/' . $file_path;
+    if (move_uploaded_file($file['tmp_name'], $full_file_path)) {
+        error_log("File saved at: $full_file_path");
+    } else {
+        error_log("Failed to save file: $full_file_path - Error: " . print_r(error_get_last(), true));
+    }
 
     // Tải ảnh từ URL
     $cover_image = $music_dir . '/cover.jpg';
+    $full_cover_path = $_SERVER['DOCUMENT_ROOT'] . '/admin/' . $cover_image;
     if ($cover_image_url) {
         $image_content = file_get_contents($cover_image_url);
         if ($image_content !== false) {
-            file_put_contents($cover_image, $image_content);
+            file_put_contents($full_cover_path, $image_content);
         }
     }
 
@@ -40,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'composer' => $composer,
         'uploaded_by' => $uploaded_by,
         'file_path' => $file_path,
-        'cover_image' => basename($cover_image) ?: null,
+        'cover_image' => $cover_image ?: null,
         'upload_date' => date('Y-m-d H:i:s')
     ];
-    file_put_contents($music_dir . '/info.json', json_encode($music_info, JSON_PRETTY_PRINT));
+    file_put_contents($full_music_dir . '/info.json', json_encode($music_info, JSON_PRETTY_PRINT));
 
     $stmt = $pdo->prepare("INSERT INTO musics (title, composer, uploaded_by, cover_image, file_path) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([$title, $composer, $uploaded_by, $cover_image, $file_path]);
