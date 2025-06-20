@@ -127,15 +127,12 @@ foreach ($musics as $music) {
 </div>
 
 <!-- Trình phát nhạc -->
-<div id="musicBar" style="display:none;">
-  <img id="bar-cover" src="" style="width:60px;height:60px;object-fit:cover;margin-right:10px;">
-  <div class="controls">
-    <button onclick="playPrevious()">❮</button>
-    <button onclick="playPause()">▶/❚❚</button>
-    <button onclick="playNext()">❯</button>
-  </div>
+<div id="musicBar">
+  <img id="bar-cover" src="" style="width:50px;height:50px;object-fit:cover;margin-right:10px;">
+  <button class="play-pause-button" onclick="playPause()">▶/❚❚</button>
   <progress id="bar-progress" value="0" max="1"></progress>
   <span id="bar-time">0:00 / 0:00</span>
+  <input type="range" id="volume-control" min="0" max="1" step="0.1" value="1">
   <audio id="audioPlayer"></audio>
 </div>
 
@@ -150,14 +147,21 @@ const barCover = document.getElementById('bar-cover');
 const barProgress = document.getElementById('bar-progress');
 const barTime = document.getElementById('bar-time');
 const musicBar = document.getElementById('musicBar');
+const volumeControl = document.getElementById('volume-control');
+const playPauseButton = document.querySelector('.play-pause-button');
 
 function playTrack(i) {
+  if (!audio) {
+    console.error('Audio element not found!');
+    return;
+  }
   current = i;
   audio.src = tracks[i];
-  audio.play();
+  audio.play().catch(error => console.error('Error playing audio:', error));
   barCover.src = musics[i].cover_image ? 'admin/' + musics[i].cover_image : 'https://via.placeholder.com/150';
-  musicBar.style.display = 'flex';
-  startBeatAnimation(musics[i].bpm || 120); // Bắt đầu animation với BPM
+  musicBar.classList.add('active');
+  startBeatAnimation(musics[i].bpm || 120);
+  playPauseButton.textContent = '❚❚'; // Chuyển sang pause khi play
 }
 
 audio.ontimeupdate = () => {
@@ -170,15 +174,20 @@ audio.ontimeupdate = () => {
   }
 };
 
-audio.onended = () => playNext();
+audio.onended = () => {
+  playNext();
+  playPauseButton.textContent = '▶'; // Trở lại play khi kết thúc
+};
 
 function playPause() {
   if (audio.paused) {
-    audio.play();
-    startBeatAnimation(musics[current].bpm || 120); // Tiếp tục animation khi play
+    audio.play().catch(error => console.error('Error playing audio:', error));
+    startBeatAnimation(musics[current].bpm || 120);
+    playPauseButton.textContent = '❚❚'; // Chuyển sang pause khi play
   } else {
     audio.pause();
-    stopBeatAnimation(); // Dừng animation khi pause
+    stopBeatAnimation();
+    playPauseButton.textContent = '▶'; // Trở lại play khi pause
   }
 }
 
@@ -228,12 +237,12 @@ function closePlaylistModal() {
 // Hàm animation nhảy theo BPM
 function startBeatAnimation(bpm) {
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
-  const beatInterval = 60000 / bpm; // Chuyển BPM sang mili giây mỗi nhịp
+  const beatInterval = 60000 / bpm;
   let lastBeat = performance.now();
 
   function animate(currentTime) {
     const timeSinceLastBeat = currentTime - lastBeat;
-    const scale = 1 + Math.sin(timeSinceLastBeat / beatInterval * 2 * Math.PI) * 0.1; // Dao động scale từ 0.9 đến 1.1
+    const scale = 1 + Math.sin(timeSinceLastBeat / beatInterval * 2 * Math.PI) * 0.1;
     barCover.style.transform = `scale(${scale})`;
     animationFrameId = requestAnimationFrame(animate);
     if (timeSinceLastBeat >= beatInterval) {
@@ -247,11 +256,25 @@ function stopBeatAnimation() {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
-    barCover.style.transform = 'scale(1)'; // Trả về kích thước ban đầu
+    barCover.style.transform = 'scale(1)';
   }
 }
 
+// Thêm sự kiện cho volume control
+volumeControl.addEventListener('input', () => {
+  if (audio) audio.volume = volumeControl.value;
+});
 
+// Thêm sự kiện tua nhạc bằng thanh progress
+barProgress.addEventListener('click', (e) => {
+  const rect = barProgress.getBoundingClientRect();
+  const percent = (e.clientX - rect.left) / rect.width;
+  if (audio.duration) {
+    audio.currentTime = percent * audio.duration;
+  }
+});
+
+// Thêm thumb cho thanh progress (dùng CSS, đã cập nhật trong style.css)
 </script>
 </body>
 </html>
