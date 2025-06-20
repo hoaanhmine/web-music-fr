@@ -46,3 +46,8 @@ CREATE TABLE user_favorites (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (music_id) REFERENCES musics(id) ON DELETE CASCADE
     );
+
+
+-- Thêm sau:
+
+ALTER TABLE musics ADD COLUMN bpm INT DEFAULT 120;
