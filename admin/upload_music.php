@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $uploaded_by = $_SESSION['user_id'];
     $cover_image_url = $_POST['cover_image_url'] ?? null;
     $file = $_FILES['musicFile'];
+    $bpm = $_POST['bpm'] ?? 120; // Lấy bpm, mặc định 120 nếu không nhập
 
     // Tạo thư mục theo tên bài hát trong admin/upload
     $sanitized_title = preg_replace('/[^A-Za-z0-9\-]/', '_', $title);
@@ -49,12 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'uploaded_by' => $uploaded_by,
         'file_path' => $file_path,
         'cover_image' => $cover_image ?: null,
-        'upload_date' => date('Y-m-d H:i:s')
+        'upload_date' => date('Y-m-d H:i:s'),
+        'bpm' => $bpm // Thêm bpm vào JSON
     ];
     file_put_contents($full_music_dir . '/info.json', json_encode($music_info, JSON_PRETTY_PRINT));
 
-    $stmt = $pdo->prepare("INSERT INTO musics (title, composer, uploaded_by, cover_image, file_path) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$title, $composer, $uploaded_by, $cover_image, $file_path]);
+    // Thêm vào cơ sở dữ liệu
+    $stmt = $pdo->prepare("INSERT INTO musics (title, composer, uploaded_by, cover_image, file_path, bpm) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$title, $composer, $uploaded_by, $cover_image, $file_path, $bpm]);
 
     header("Location: upload_music.php?success=1");
 }
@@ -68,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <style>
         .upload-container { width: 400px; margin: 50px auto; text-align: center; }
         .form-group { margin-bottom: 15px; text-align: left; }
-        input[type="text"], input[type="file"], input[type="url"] { width: 100%; padding: 8px; }
+        input[type="text"], input[type="file"], input[type="url"], input[type="number"] { width: 100%; padding: 8px; }
         button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         .success { color: green; }
@@ -95,9 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <label for="musicFile">Tệp nhạc (.ogg, .wav):</label>
                 <input type="file" name="musicFile" id="musicFile" accept=".ogg,.wav" required>
             </div>
+            <div class="form-group">
+                <label for="bpm">BPM (Nhịp/Phút):</label>
+                <input type="number" name="bpm" id="bpm" value="120" min="60" max="500">
+            </div>
             <button type="submit">Tải lên</button>
         </form>
-        <p><a href="manage_music.php">Quản lý nhạc</a> | <a href="../index.php">Quay lại trang chính</a></p>
+        <p><a href="admin_manage_music.php">Quản lý nhạc</a> | <a href="../index.php">Quay lại trang chính</a></p>
     </div>
 </body>
 </html>

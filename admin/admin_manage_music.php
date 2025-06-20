@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $composer = $_POST['composer'] ?? null;
         $stmt = $pdo->prepare("UPDATE musics SET title = ?, composer = ? WHERE id = ?");
         $stmt->execute([$title, $composer, $id]);
-        header("Location: manage_music.php?success=1");
+        header("Location: admin_manage_music.php?success=1");
     }
 }
 
