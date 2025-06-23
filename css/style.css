@@ -375,7 +375,7 @@ body {
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
     justify-content: flex-start;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     z-index: 1000;
 }
 
@@ -404,10 +404,23 @@ body {
     color: #fff;
 }
 
+.nav-button {
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.nav-button:hover {
+    color: #fff;
+}
+
 #bar-progress {
     flex-grow: 1;
     height: 5px;
-    margin: 0 10px;
+    margin: 0 5px;
     -webkit-appearance: none;
     width: 100%;
     background: #333;

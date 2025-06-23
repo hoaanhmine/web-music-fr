@@ -128,10 +128,12 @@ foreach ($musics as $music) {
 
 <!-- Trình phát nhạc -->
 <div id="musicBar">
-  <img id="bar-cover" src="" style="width:50px;height:50px;object-fit:cover;margin-right:10px;">
-  <button class="play-pause-button" onclick="playPause()">▶/❚❚</button>
+  <img id="bar-cover" src="" style="width:40px;height:40px;object-fit:cover;">
+  <button class="nav-button" onclick="playPrevious()">⏮️</button>
   <progress id="bar-progress" value="0" max="1"></progress>
   <span id="bar-time">0:00 / 0:00</span>
+  <button class="play-pause-button" onclick="playPause()">▶</button>
+  <button class="nav-button" onclick="playNext()">⏭️</button>
   <input type="range" id="volume-control" min="0" max="1" step="0.1" value="1">
   <audio id="audioPlayer"></audio>
 </div>
@@ -193,10 +195,12 @@ function playPause() {
 
 function playPrevious() {
   if (current > 0) playTrack(current - 1);
+  else if (current === 0) playTrack(tracks.length - 1); // Quay lại bài đầu nếu ở đầu danh sách
 }
 
 function playNext() {
   if (current + 1 < tracks.length) playTrack(current + 1);
+  else playTrack(0); // Chuyển sang bài đầu nếu ở cuối danh sách
 }
 
 function formatTime(s) {
@@ -273,8 +277,6 @@ barProgress.addEventListener('click', (e) => {
     audio.currentTime = percent * audio.duration;
   }
 });
-
-// Thêm thumb cho thanh progress (dùng CSS, đã cập nhật trong style.css)
 </script>
 </body>
 </html>
