@@ -238,19 +238,23 @@ function closePlaylistModal() {
   document.getElementById('playlist-modal').style.display='none';
 }
 
-// Hàm animation nhảy theo BPM
+// Hàm animation xoay giống FNF theo BPM
 function startBeatAnimation(bpm) {
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
-  const beatInterval = 60000 / bpm;
+  const beatInterval = 60000 / bpm; // Chuyển BPM sang mili giây mỗi nhịp
   let lastBeat = performance.now();
+  let direction = 1; // 1 cho xoay phải, -1 cho xoay trái
 
   function animate(currentTime) {
     const timeSinceLastBeat = currentTime - lastBeat;
-    const scale = 1 + Math.sin(timeSinceLastBeat / beatInterval * 2 * Math.PI) * 0.1;
-    barCover.style.transform = `scale(${scale})`;
+    const progress = timeSinceLastBeat / beatInterval; // Tiến trình từ 0 đến 1 trong 1 nhịp
+    const angle = direction * 10 * Math.sin(progress * Math.PI); // Góc xoay tối đa ±10 độ
+    barCover.style.transform = `rotate(${angle}deg)`;
+
     animationFrameId = requestAnimationFrame(animate);
     if (timeSinceLastBeat >= beatInterval) {
       lastBeat = currentTime;
+      direction *= -1; // Đổi hướng xoay
     }
   }
   animationFrameId = requestAnimationFrame(animate);
@@ -260,7 +264,7 @@ function stopBeatAnimation() {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
-    barCover.style.transform = 'scale(1)';
+    barCover.style.transform = 'rotate(0deg)'; // Trả về vị trí ban đầu
   }
 }
 
