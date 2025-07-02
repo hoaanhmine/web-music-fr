@@ -299,7 +299,7 @@ function stopBeatAnimation() {
   }
 }
 
-// Khởi tạo và vẽ visualizer sóng đẹp, động
+// Khởi tạo và vẽ visualizer sóng biển với nhiều lớp
 function initVisualizer(bpm) {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   const source = audioContext.createMediaElementSource(audio);
@@ -307,6 +307,7 @@ function initVisualizer(bpm) {
   analyser.fftSize = 1024;
   const bufferLength = analyser.frequencyBinCount;
   const timeDomainData = new Uint8Array(analyser.fftSize);
+  const waveLayers = 3; // Số lớp sóng
 
   source.connect(analyser);
   analyser.connect(audioContext.destination);
@@ -320,42 +321,52 @@ function initVisualizer(bpm) {
       analyser.getByteTimeDomainData(timeDomainData);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Gradient trắng với bóng mờ
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');
-      gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 1.5;
-      ctx.shadowBlur = 2;
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-      ctx.beginPath();
-
       const sliceWidth = canvas.width * 1.0 / analyser.fftSize;
       let x = 0;
 
-      for (let i = 0; i < analyser.fftSize; i++) {
-        const v = timeDomainData[i] / 128.0;
-        const y = (v * canvas.height / 2) + (canvas.height / 2); // Điều chỉnh tâm
+      for (let layer = 0; layer < waveLayers; layer++) {
+        ctx.beginPath();
+        const offset = layer * (canvas.height / (waveLayers + 1)); // Dịch chuyển lớp sóng
+        const ampFactor = 0.6 - (layer * 0.1); // Giảm biên độ cho các lớp sâu hơn
 
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+        for (let i = 0; i < analyser.fftSize; i++) {
+          const v = timeDomainData[i] / 128.0;
+          const amp = ampFactor; // Biên độ giảm dần
+          const y = (canvas.height / 2) + offset + (v * canvas.height * amp / 2) + Math.sin(i * 0.1 + layer * 0.5) * 2; // Uốn lượn
+
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+
+          x += sliceWidth;
         }
 
-        x += sliceWidth;
+        // Gradient cho từng lớp sóng
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, `rgba(0, 102, 204, ${0.9 - layer * 0.2})`); // Xanh đậm dần nhạt
+        gradient.addColorStop(0.5, `rgba(0, 191, 255, ${0.7 - layer * 0.2})`);
+        gradient.addColorStop(1, `rgba(135, 206, 235, ${0.3 - layer * 0.1})`);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 1.0 + (waveLayers - layer) * 0.3; // Độ dày giảm dần
+        ctx.shadowBlur = 2 + layer; // Phản xạ nhẹ tăng dần
+        ctx.shadowColor = `rgba(135, 206, 235, ${0.3 - layer * 0.1})`;
+        ctx.stroke();
       }
 
-      ctx.stroke();
-      ctx.shadowBlur = 0; // Tắt bóng mờ sau khi vẽ
+      // Phản xạ sóng (mờ dần)
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = 'rgba(135, 206, 235, 0.1)';
+      ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+      ctx.globalAlpha = 1.0;
 
       // Nhảy theo beat
       const timeSinceLastBeat = currentTime - lastBeatTime;
       if (timeSinceLastBeat >= beatInterval) {
         lastBeatTime = currentTime;
-        ctx.globalAlpha = 0.2; // Nhấp nháy nhẹ
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = 'rgba(0, 191, 255, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1.0;
       }
