@@ -51,8 +51,8 @@ foreach ($musics as $music) {
     }
     #visualizer {
       width: 100%;
-      height: 30px; /* Nhỏ gọn hơn */
-      background: transparent; /* Loại bỏ background để mượt mà */
+      height: 30px; /* Nhỏ gọn */
+      background: transparent;
       position: fixed;
       bottom: 70px;
       left: 50%;
@@ -299,12 +299,12 @@ function stopBeatAnimation() {
   }
 }
 
-// Khởi tạo và vẽ visualizer sóng đẹp, nhỏ gọn
+// Khởi tạo và vẽ visualizer sóng đẹp, động
 function initVisualizer(bpm) {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   const source = audioContext.createMediaElementSource(audio);
   const analyser = audioContext.createAnalyser();
-  analyser.fftSize = 1024; // Giảm để tối ưu hiệu suất
+  analyser.fftSize = 1024;
   const bufferLength = analyser.frequencyBinCount;
   const timeDomainData = new Uint8Array(analyser.fftSize);
 
@@ -320,12 +320,15 @@ function initVisualizer(bpm) {
       analyser.getByteTimeDomainData(timeDomainData);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Gradient màu trắng
+      // Gradient trắng với bóng mờ
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-      gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
       ctx.strokeStyle = gradient;
       ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
       ctx.beginPath();
 
       const sliceWidth = canvas.width * 1.0 / analyser.fftSize;
@@ -333,7 +336,7 @@ function initVisualizer(bpm) {
 
       for (let i = 0; i < analyser.fftSize; i++) {
         const v = timeDomainData[i] / 128.0;
-        const y = (v * canvas.height / 2);
+        const y = (v * canvas.height / 2) + (canvas.height / 2); // Điều chỉnh tâm
 
         if (i === 0) {
           ctx.moveTo(x, y);
@@ -344,15 +347,15 @@ function initVisualizer(bpm) {
         x += sliceWidth;
       }
 
-      ctx.lineTo(canvas.width, canvas.height / 2);
       ctx.stroke();
+      ctx.shadowBlur = 0; // Tắt bóng mờ sau khi vẽ
 
       // Nhảy theo beat
       const timeSinceLastBeat = currentTime - lastBeatTime;
       if (timeSinceLastBeat >= beatInterval) {
         lastBeatTime = currentTime;
-        ctx.globalAlpha = 0.3; // Nhấp nháy nhẹ
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.globalAlpha = 0.2; // Nhấp nháy nhẹ
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1.0;
       }
