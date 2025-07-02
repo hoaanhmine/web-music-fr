@@ -49,6 +49,23 @@ foreach ($musics as $music) {
     #bar-cover {
       transition: transform 0.1s ease-out;
     }
+    #visualizer {
+      width: 100%;
+      height: 50px;
+      background: #1e1e1e;
+      position: fixed;
+      bottom: 70px; /* Dưới #musicBar */
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+    }
+    #visualizer.active {
+      display: block;
+    }
+    canvas#visualizer-canvas {
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body>
@@ -138,6 +155,11 @@ foreach ($musics as $music) {
   <audio id="audioPlayer"></audio>
 </div>
 
+<!-- Panel visualize -->
+<div id="visualizer">
+  <canvas id="visualizer-canvas"></canvas>
+</div>
+
 <script>
 const musics = <?= json_encode($musics) ?>;
 const tracks = <?= json_encode($tracks) ?>;
@@ -151,6 +173,9 @@ const barTime = document.getElementById('bar-time');
 const musicBar = document.getElementById('musicBar');
 const volumeControl = document.getElementById('volume-control');
 const playPauseButton = document.querySelector('.play-pause-button');
+const visualizer = document.getElementById('visualizer');
+const canvas = document.getElementById('visualizer-canvas');
+const ctx = canvas.getContext('2d');
 
 function playTrack(i) {
   if (!audio) {
@@ -162,8 +187,10 @@ function playTrack(i) {
   audio.play().catch(error => console.error('Error playing audio:', error));
   barCover.src = musics[i].cover_image ? 'admin/' + musics[i].cover_image : 'https://via.placeholder.com/150';
   musicBar.classList.add('active');
+  visualizer.classList.add('active'); // Kích hoạt visualizer
   startBeatAnimation(musics[i].bpm || 120);
-  playPauseButton.textContent = '❚❚'; // Chuyển sang pause khi play
+  playPauseButton.textContent = '❚❚';
+  initVisualizer();
 }
 
 audio.ontimeupdate = () => {
@@ -178,29 +205,32 @@ audio.ontimeupdate = () => {
 
 audio.onended = () => {
   playNext();
-  playPauseButton.textContent = '▶'; // Trở lại play khi kết thúc
+  playPauseButton.textContent = '▶';
+  visualizer.classList.remove('active'); // Tắt visualizer khi kết thúc
 };
 
 function playPause() {
   if (audio.paused) {
     audio.play().catch(error => console.error('Error playing audio:', error));
+    visualizer.classList.add('active'); // Kích hoạt visualizer khi play
     startBeatAnimation(musics[current].bpm || 120);
-    playPauseButton.textContent = '❚❚'; // Chuyển sang pause khi play
+    playPauseButton.textContent = '❚❚';
   } else {
     audio.pause();
     stopBeatAnimation();
-    playPauseButton.textContent = '▶'; // Trở lại play khi pause
+    visualizer.classList.remove('active'); // Tắt visualizer khi pause
+    playPauseButton.textContent = '▶';
   }
 }
 
 function playPrevious() {
   if (current > 0) playTrack(current - 1);
-  else if (current === 0) playTrack(tracks.length - 1); // Quay lại bài đầu nếu ở đầu danh sách
+  else if (current === 0) playTrack(tracks.length - 1);
 }
 
 function playNext() {
   if (current + 1 < tracks.length) playTrack(current + 1);
-  else playTrack(0); // Chuyển sang bài đầu nếu ở cuối danh sách
+  else playTrack(0);
 }
 
 function formatTime(s) {
@@ -208,7 +238,7 @@ function formatTime(s) {
   return `${m}:${sec<10?'0':''}${sec}`;
 }
 
-function toggleDropdown(btn,id) {
+function toggleDropdown(btn, id) {
   const dd = document.getElementById('dropdown-'+id);
   dd.classList.toggle('active');
   document.addEventListener('click', e => {
@@ -241,20 +271,20 @@ function closePlaylistModal() {
 // Hàm animation xoay giống FNF theo BPM
 function startBeatAnimation(bpm) {
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
-  const beatInterval = 60000 / bpm; // Chuyển BPM sang mili giây mỗi nhịp
+  const beatInterval = 60000 / bpm;
   let lastBeat = performance.now();
-  let direction = 1; // 1 cho xoay phải, -1 cho xoay trái
+  let direction = 1;
 
   function animate(currentTime) {
     const timeSinceLastBeat = currentTime - lastBeat;
-    const progress = timeSinceLastBeat / beatInterval; // Tiến trình từ 0 đến 1 trong 1 nhịp
-    const angle = direction * 10 * Math.sin(progress * Math.PI); // Góc xoay tối đa ±10 độ
+    const progress = timeSinceLastBeat / beatInterval;
+    const angle = direction * 10 * Math.sin(progress * Math.PI);
     barCover.style.transform = `rotate(${angle}deg)`;
 
     animationFrameId = requestAnimationFrame(animate);
     if (timeSinceLastBeat >= beatInterval) {
       lastBeat = currentTime;
-      direction *= -1; // Đổi hướng xoay
+      direction *= -1;
     }
   }
   animationFrameId = requestAnimationFrame(animate);
@@ -264,8 +294,39 @@ function stopBeatAnimation() {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
-    barCover.style.transform = 'rotate(0deg)'; // Trả về vị trí ban đầu
+    barCover.style.transform = 'rotate(0deg)';
   }
+}
+
+// Khởi tạo và vẽ visualizer
+function initVisualizer() {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioContext.createMediaElementSource(audio);
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256; // Kích thước FFT, ảnh hưởng đến độ chi tiết
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  source.connect(analyser);
+  analyser.connect(audioContext.destination);
+
+  function draw() {
+    requestAnimationFrame(draw);
+    if (visualizer.classList.contains('active')) {
+      analyser.getByteFrequencyData(dataArray);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] * canvas.height / 255;
+        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+        x += barWidth + 1;
+      }
+    }
+  }
+  draw();
 }
 
 // Thêm sự kiện cho volume control
