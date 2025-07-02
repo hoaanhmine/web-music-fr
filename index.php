@@ -51,13 +51,14 @@ foreach ($musics as $music) {
     }
     #visualizer {
       width: 100%;
-      height: 50px;
-      background: #1e1e1e;
+      height: 30px; /* Nhỏ gọn hơn */
+      background: transparent; /* Loại bỏ background để mượt mà */
       position: fixed;
-      bottom: 70px; /* Dưới #musicBar */
+      bottom: 70px;
       left: 50%;
       transform: translateX(-50%);
       display: none;
+      overflow: hidden;
     }
     #visualizer.active {
       display: block;
@@ -187,10 +188,10 @@ function playTrack(i) {
   audio.play().catch(error => console.error('Error playing audio:', error));
   barCover.src = musics[i].cover_image ? 'admin/' + musics[i].cover_image : 'https://via.placeholder.com/150';
   musicBar.classList.add('active');
-  visualizer.classList.add('active'); // Kích hoạt visualizer
+  visualizer.classList.add('active');
   startBeatAnimation(musics[i].bpm || 120);
   playPauseButton.textContent = '❚❚';
-  initVisualizer();
+  initVisualizer(musics[i].bpm || 120);
 }
 
 audio.ontimeupdate = () => {
@@ -206,19 +207,19 @@ audio.ontimeupdate = () => {
 audio.onended = () => {
   playNext();
   playPauseButton.textContent = '▶';
-  visualizer.classList.remove('active'); // Tắt visualizer khi kết thúc
+  visualizer.classList.remove('active');
 };
 
 function playPause() {
   if (audio.paused) {
     audio.play().catch(error => console.error('Error playing audio:', error));
-    visualizer.classList.add('active'); // Kích hoạt visualizer khi play
+    visualizer.classList.add('active');
     startBeatAnimation(musics[current].bpm || 120);
     playPauseButton.textContent = '❚❚';
   } else {
     audio.pause();
     stopBeatAnimation();
-    visualizer.classList.remove('active'); // Tắt visualizer khi pause
+    visualizer.classList.remove('active');
     playPauseButton.textContent = '▶';
   }
 }
@@ -298,31 +299,62 @@ function stopBeatAnimation() {
   }
 }
 
-// Khởi tạo và vẽ visualizer
-function initVisualizer() {
+// Khởi tạo và vẽ visualizer sóng đẹp, nhỏ gọn
+function initVisualizer(bpm) {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   const source = audioContext.createMediaElementSource(audio);
   const analyser = audioContext.createAnalyser();
-  analyser.fftSize = 256; // Kích thước FFT, ảnh hưởng đến độ chi tiết
+  analyser.fftSize = 1024; // Giảm để tối ưu hiệu suất
   const bufferLength = analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
+  const timeDomainData = new Uint8Array(analyser.fftSize);
 
   source.connect(analyser);
   analyser.connect(audioContext.destination);
 
-  function draw() {
+  const beatInterval = 60000 / bpm;
+  let lastBeatTime = performance.now();
+
+  function draw(currentTime) {
     requestAnimationFrame(draw);
     if (visualizer.classList.contains('active')) {
-      analyser.getByteFrequencyData(dataArray);
+      analyser.getByteTimeDomainData(timeDomainData);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const barWidth = (canvas.width / bufferLength) * 2.5;
+
+      // Gradient màu trắng
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+
+      const sliceWidth = canvas.width * 1.0 / analyser.fftSize;
       let x = 0;
 
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] * canvas.height / 255;
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
-        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
-        x += barWidth + 1;
+      for (let i = 0; i < analyser.fftSize; i++) {
+        const v = timeDomainData[i] / 128.0;
+        const y = (v * canvas.height / 2);
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+
+        x += sliceWidth;
+      }
+
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+
+      // Nhảy theo beat
+      const timeSinceLastBeat = currentTime - lastBeatTime;
+      if (timeSinceLastBeat >= beatInterval) {
+        lastBeatTime = currentTime;
+        ctx.globalAlpha = 0.3; // Nhấp nháy nhẹ
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;
       }
     }
   }
