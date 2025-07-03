@@ -1,0 +1,68 @@
+body {
+    background: #f6f6f6;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.form-container {
+    width: 340px;
+    margin: 60px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 32px 28px 24px 28px;
+    text-align: center;
+}
+h2 {
+    margin-bottom: 24px;
+    color: #222;
+}
+input[type="text"], input[type="password"], input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #222;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border 0.2s;
+}
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
+    border: 1.5px solid #007bff;
+    outline: none;
+}
+button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+.error {
+    color: #dc3545;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+.success {
+    color: #28a745;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}

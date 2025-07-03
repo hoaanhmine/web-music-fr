@@ -1,0 +1,29 @@
+.upload-container, .admin-content form {
+    max-width: 420px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 28px 28px 18px 28px;
+    border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+.form-group { margin-bottom: 18px; }
+label { display: block; font-weight: 500; margin-bottom: 7px; color: #222; }
+input[type="text"], input[type="url"], input[type="number"], input[type="file"] {
+    width: 100%; padding: 9px; box-sizing: border-box;
+    border: 1px solid #ccc; border-radius: 6px; color: #222; background: #fff;
+    font-size: 1em;
+}
+input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus {
+    border: 1.5px solid #007bff;
+    outline: none;
+}
+button {
+    background-color: #28a745; color: white; padding: 10px 22px;
+    border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
+    font-size: 1em; margin-top: 8px; transition: background 0.2s;
+}
+button:hover { background-color: #218838; }
+.success { color: #28a745; font-weight: bold; margin-bottom: 14px; font-size: 1.1em; }
+@media (max-width: 600px) {
+    .upload-container, .admin-content form { max-width: 98vw; padding: 10px; }
+}

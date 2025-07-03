@@ -3,61 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Tải Nhạc Lên</title>
-    <style>
-        body { font-family: Arial; background-color: #f7f7f7; }
-        .upload-container {
-            width: 420px; margin: 50px auto; background: white;
-            padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], input[type="url"], input[type="number"], input[type="file"] {
-            width: 100%; padding: 8px; box-sizing: border-box;
-        }
-        button {
-            background-color: #28a745; color: white; padding: 10px 20px;
-            border: none; border-radius: 5px; cursor: pointer;
-        }
-        button:hover { background-color: #218838; }
-        .success { color: green; font-weight: bold; margin-bottom: 10px; }
-    </style>
+    <link rel="stylesheet" href="../css/upload_music.css">
 </head>
-<body>
-<div class="upload-container">
-    <h2>Upload Nhạc</h2>
-    <?php if (isset($_GET['success'])): ?>
-        <p class="success">✅ Tải nhạc thành công!</p>
-    <?php endif; ?>
-    <form method="post" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="title">Tên bài hát:</label>
-            <input type="text" name="title" id="title" required>
-        </div>
-        <div class="form-group">
-            <label for="composer">Tác giả:</label>
-            <input type="text" name="composer" id="composer">
-        </div>
-        <div class="form-group">
-            <label for="cover_image_url">Link ảnh bìa:</label>
-            <input type="url" name="cover_image_url" id="cover_image_url" placeholder="https://example.com/cover.jpg">
-        </div>
-        <div class="form-group">
-            <label for="musicFile">Tệp nhạc (.ogg, .wav):</label>
-            <input type="file" name="musicFile" id="musicFile" accept=".ogg,.wav" required>
-        </div>
-        <div class="form-group">
-            <label for="bpm">BPM (nhịp/phút):</label>
-            <input type="number" name="bpm" id="bpm" value="120" min="60" max="500">
-        </div>
-        <button type="submit">Tải lên</button>
-    </form>
-    <p><a href="admin_manage_music.php">🎵 Quản lý nhạc</a> | <a href="../index.php">🏠 Trang chính</a></p>
-</div>
-</body>
-</html>
-
-
-
 <?php
 session_start();
 require_once '../config/database.php';
@@ -131,4 +78,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: upload_music.php?success=1");
     exit();
 }
+
+ob_start();
 ?>
+<h2>⬆️ Thêm nhạc mới</h2>
+<?php if (isset($_GET['success'])): ?>
+    <p class="success">✅ Tải nhạc thành công!</p>
+<?php endif; ?>
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="title">Tên bài hát:</label>
+        <input type="text" name="title" id="title" required>
+    </div>
+    <div class="form-group">
+        <label for="composer">Tác giả:</label>
+        <input type="text" name="composer" id="composer">
+    </div>
+    <div class="form-group">
+        <label for="cover_image_url">Link ảnh bìa:</label>
+        <input type="url" name="cover_image_url" id="cover_image_url" placeholder="https://example.com/cover.jpg">
+    </div>
+    <div class="form-group">
+        <label for="musicFile">Tệp nhạc (.ogg, .wav):</label>
+        <input type="file" name="musicFile" id="musicFile" accept=".ogg,.wav" required>
+    </div>
+    <div class="form-group">
+        <label for="bpm">BPM (nhịp/phút):</label>
+        <input type="number" name="bpm" id="bpm" value="120" min="60" max="500">
+    </div>
+    <button type="submit">Tải lên</button>
+</form>
+<?php
+$content = ob_get_clean();
+$title = "Thêm nhạc";
+include '../views/admin_layout.php';

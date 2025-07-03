@@ -21,11 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Đăng ký</title>
-    <style>
-        .form-container { width: 300px; margin: 50px auto; text-align: center; }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
+    <link rel="stylesheet" href="../css/account.css">
 </head>
 <body>
     <div class="form-container">

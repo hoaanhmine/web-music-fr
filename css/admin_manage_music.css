@@ -1,0 +1,141 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f6f6f6;
+    margin: 0;
+    padding: 0;
+}
+.manage-container {
+    max-width: 950px;
+    margin: 40px auto;
+    padding: 32px 32px 24px 32px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+}
+h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    color: #222;
+    letter-spacing: 1px;
+}
+.music-item {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    border: 1px solid #e0e0e0;
+    padding: 18px 20px;
+    border-radius: 12px;
+    align-items: center;
+    background: #fafbfc;
+    transition: box-shadow 0.2s;
+}
+.music-item:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.music-cover {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    background-color: #eee;
+    border: 1px solid #ddd;
+}
+.music-info {
+    flex: 1;
+    color: #222;
+}
+.music-info label {
+    font-weight: 500;
+    color: #333;
+    margin-top: 8px;
+    display: block;
+}
+.music-info input[type="text"], .music-info input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #222;
+    background: #fff;
+    transition: border 0.2s;
+}
+.music-info input[type="text"]:focus, .music-info input[type="number"]:focus {
+    border: 1.5px solid #007bff;
+    outline: none;
+}
+.music-meta {
+    color: #666;
+    font-size: 0.98em;
+    margin-bottom: 12px;
+    margin-top: 6px;
+}
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1em;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+button[name="update"] {
+    background-color: #007bff;
+    color: #fff;
+}
+button[name="update"]:hover {
+    background-color: #0056b3;
+}
+button[name="delete"] {
+    background-color: #dc3545;
+    color: #fff;
+}
+button[name="delete"]:hover {
+    background-color: #b52a37;
+}
+.success {
+    color: #28a745;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+.bottom-links {
+    text-align: center;
+    margin-top: 36px;
+}
+.edit-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.98em;
+    color: #007bff;
+    background: #f0f7ff;
+    padding: 5px 14px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+.edit-link:hover {
+    background: #e0eaff;
+    color: #0056b3;
+}
+@media (max-width: 700px) {
+    .manage-container { padding: 10px; }
+    .music-item { flex-direction: column; align-items: stretch; gap: 10px; }
+    .music-cover { width: 100%; height: 180px; }
+}

@@ -31,10 +31,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = $_POST['id'];
         $title = $_POST['title'];
         $composer = $_POST['composer'] ?? null;
-        $stmt = $pdo->prepare("UPDATE musics SET title = ?, composer = ? WHERE id = ?");
-        $stmt->execute([$title, $composer, $id]);
-        header("Location: admin_manage_music.php?success=1");
-        exit();
+
+        // Lấy dữ liệu cũ
+        $stmt = $pdo->prepare("SELECT title, composer FROM musics WHERE id = ?");
+        $stmt->execute([$id]);
+        $old = $stmt->fetch();
+
+        if ($old && ($old['title'] !== $title || $old['composer'] !== $composer)) {
+            // Chỉ update nếu có thay đổi
+            $stmt = $pdo->prepare("UPDATE musics SET title = ?, composer = ? WHERE id = ?");
+            $stmt->execute([$title, $composer, $id]);
+            header("Location: admin_manage_music.php?success=1");
+            exit();
+        } else {
+            // Không thay đổi, không báo thành công
+            header("Location: admin_manage_music.php?nochange=1");
+            exit();
+        }
     }
 }
 
@@ -42,99 +55,21 @@ $stmt = $pdo->query("SELECT * FROM musics ORDER BY upload_date DESC");
 $musics = $stmt->fetchAll();
 ?>
 
+<?php
+ob_start();
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>  
     <meta charset="UTF-8">
     <title>Quản lý Nhạc</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f6f6f6;
-            margin: 0;
-            padding: 0;
-        }
-        .manage-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .music-item {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            align-items: center;
-        }
-        .music-cover {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-            background-color: #eee;
-        }
-        .music-info {
-            flex: 1;
-        }
-        .music-info input[type="text"] {
-            width: 100%;
-            padding: 6px 8px;
-            margin-bottom: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .music-meta {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button[name="update"] {
-            background-color: #007bff;
-            color: #fff;
-        }
-        button[name="delete"] {
-            background-color: #dc3545;
-            color: #fff;
-        }
-        .success {
-            color: green;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .bottom-links {
-            text-align: center;
-            margin-top: 30px;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/admin_manage_music.css">
 </head>
 <body>
     <div class="manage-container">
         <h2>🎵 Quản lý Nhạc</h2>
         <?php if (isset($_GET['success'])) echo "<p class='success'>✅ Cập nhật thành công!</p>"; ?>
+        <?php if (isset($_GET['nochange'])) echo "<p class='success'>ℹ️ Không có thay đổi nào!</p>"; ?>
 
         <?php foreach ($musics as $music): ?>
             <div class="music-item">
@@ -158,6 +93,8 @@ $musics = $stmt->fetchAll();
                         <button type="submit" name="update">Sửa</button>
                         <button type="submit" name="delete" onclick="return confirm('Bạn có chắc muốn xóa bài này?')">Xóa</button>
                     </div>
+
+                    <a href="edit_music.php?id=<?php echo $music['id']; ?>" class="edit-link">✏️ Sửa chi tiết</a>
                 </form>
             </div>
         <?php endforeach; ?>
@@ -168,3 +105,8 @@ $musics = $stmt->fetchAll();
     </div>
 </body>
 </html>
+<?php
+$content = ob_get_clean();
+$title = "Quản lý nhạc";
+include '../views/admin_layout.php';
+?>

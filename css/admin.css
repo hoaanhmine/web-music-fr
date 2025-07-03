@@ -1,0 +1,97 @@
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f6f6f6;
+        margin: 0;
+        padding: 0;
+    }
+    .manage-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        color: #222; /* Thêm dòng này */
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #222;
+    }
+    .music-item {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        align-items: center;
+        color: #222;
+    }
+    .music-cover {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        background-color: #eee;
+    }
+    .music-info {
+        flex: 1;
+        color: #222;
+    }
+    .music-info label {
+        color: #222;
+    }
+    .music-info input[type="text"], .music-info input[type="number"] {
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        color: #222;
+        background: #fff;
+    }
+    .music-meta {
+        color: #444;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    button {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    button[name="update"] {
+        background-color: #007bff;
+        color: #fff;
+    }
+    button[name="delete"] {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    .success {
+        color: green;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    a {
+        color: #007bff;
+        text-decoration: none;
+    }
+    .bottom-links {
+        text-align: center;
+        margin-top: 30px;
+    }
+    .edit-link {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #007bff;
+    }
