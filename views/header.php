@@ -1,8 +1,8 @@
 <div class="header">
   <div class="auth-buttons">
-    <?php if ($user_id): ?>
+    <?php if (isset($user_id) && $user_id): ?>
       <form method="post" action="taikhoan/logout.php" style="display:inline;">
-        <button>Đăng xuất</button>
+        <button type="submit">Đăng xuất</button>
       </form>
       <?php if ($role === 'admin'): ?>
         <a href="admin/admin_manage_music.php">Quản lý nhạc</a>
