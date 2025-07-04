@@ -12,7 +12,7 @@ window.playTrack = function(index) {
         if (window.visualizer) window.visualizer.classList.remove('active');
     });
     if (window.barCover && window.musics[index]) {
-        window.barCover.src = window.musics[index].cover_image ? 'admin/' . window.musics[index].cover_image : 'https://via.placeholder.com/150';
+        window.barCover.src = window.musics[index].cover_image ? 'admin/' + window.musics[index].cover_image : 'https://via.placeholder.com/150';
     }
     if (window.musicBar) window.musicBar.classList.add('active');
     if (window.visualizer) {
@@ -87,15 +87,22 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.scale(dpr, dpr);
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaElementSource(window.audio);
-        const analyser = audioContext.createAnalyser();
+        // Chỉ tạo audioContext và source một lần duy nhất
+        if (!window._audioContext) {
+            window._audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (!window._audioSource) {
+            window._audioSource = window._audioContext.createMediaElementSource(window.audio);
+            window._audioSource.connect(window._audioContext.destination);
+        }
+
+        // Luôn tạo mới analyser cho mỗi lần visualizer
+        const analyser = window._audioContext.createAnalyser();
         analyser.fftSize = 64;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
+        window._audioSource.connect(analyser);
 
         function draw() {
             requestAnimationFrame(draw);
