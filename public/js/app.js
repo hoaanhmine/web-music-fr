@@ -1,16 +1,24 @@
 // Định nghĩa các biến và hàm global trước
-let current = 0;
 let isRandom = false;
 
 window.playTrack = function(index) {
     if (!window.audio || !window.tracks[index]) return;
-    window.current = index;
+    window.current = index; // Đảm bảo dùng window.current
     window.audio.src = window.tracks[index];
-    window.audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-        if (window.playPauseButton) window.playPauseButton.textContent = '▶';
-        if (window.visualizer) window.visualizer.classList.remove('active');
-    });
+
+    // Chỉ play khi audio đã sẵn sàng
+    const playAudio = () => {
+        window.audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+            if (window.playPauseButton) window.playPauseButton.textContent = '▶';
+            if (window.visualizer) window.visualizer.classList.remove('active');
+        });
+        window.audio.removeEventListener('canplay', playAudio);
+        window.audio.removeEventListener('loadeddata', playAudio);
+    };
+    window.audio.addEventListener('canplay', playAudio);
+    window.audio.addEventListener('loadeddata', playAudio);
+
     if (window.barCover && window.musics[index]) {
         window.barCover.src = window.musics[index].cover_image ? 'admin/' + window.musics[index].cover_image : 'https://via.placeholder.com/150';
     }
@@ -186,9 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
             window.audio.play().catch(error => console.error('Error playing audio:', error));
             if (window.visualizer) {
                 window.visualizer.classList.add('active');
-                if (window.musics[current]) window.initVisualizer(window.musics[current].bpm || 120);
+                if (window.musics[window.current]) window.initVisualizer(window.musics[window.current].bpm || 120);
             }
-            if (window.musics[current]) startBeatAnimation(window.musics[current].bpm || 120);
+            if (window.musics[window.current]) startBeatAnimation(window.musics[window.current].bpm || 120);
             if (window.playPauseButton) window.playPauseButton.textContent = '❚❚';
         } else {
             window.audio.pause();
@@ -199,21 +207,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function playPrevious() {
-        console.log('playPrevious called, current:', current);
-        if (current > 0) window.playTrack(current - 1);
-        else if (current === 0) window.playTrack(window.tracks.length - 1);
+        console.log('playPrevious called, current:', window.current);
+        if (window.current > 0) window.playTrack(window.current - 1);
+        else if (window.current === 0) window.playTrack(window.tracks.length - 1);
     }
 
     function playNext() {
-        console.log('playNext called, current:', current, 'isRandom:', isRandom);
+        console.log('playNext called, current:', window.current, 'isRandom:', isRandom);
         if (isRandom) {
             let next;
             do {
                 next = Math.floor(Math.random() * window.tracks.length);
-            } while (window.tracks.length > 1 && next === current);
+            } while (window.tracks.length > 1 && next === window.current);
             window.playTrack(next);
         } else {
-            if (current + 1 < window.tracks.length) window.playTrack(current + 1);
+            if (window.current + 1 < window.tracks.length) window.playTrack(window.current + 1);
             else window.playTrack(0);
         }
     }
