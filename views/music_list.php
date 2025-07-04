@@ -4,7 +4,6 @@
     <?php foreach ($musics as $i => $mus): ?>
       <li>
         <img src="<?= $mus['cover_image'] ? 'admin/' . $mus['cover_image'] : 'https://via.placeholder.com/150' ?>" alt="cover">
-        <button class="play-music-button" onclick="playTrack(<?= $i ?>)">▶</button>
         <?php if ($user_id): ?>
           <button class="add-to-playlist" onclick="toggleDropdown(this, <?= $mus['id'] ?>)">+</button>
           <div class="playlist-dropdown" id="dropdown-<?= $mus['id'] ?>">
@@ -18,6 +17,7 @@
           </div>
         <?php endif; ?>
         <span><?= htmlspecialchars($mus['title']) ?></span>
+        <button class="play-music-button" onclick="playTrack(<?= $i ?>)">▶</button>
       </li>
     <?php endforeach; ?>
   </ul>

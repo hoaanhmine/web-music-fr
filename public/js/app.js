@@ -17,10 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('visualizer-canvas');
     const ctx = canvas.getContext('2d');
 
-    document.getElementById('btn-random').addEventListener('click', function() {
-        isRandom = !isRandom;
-        this.classList.toggle('active', isRandom);
-    });
+    // Đảm bảo các phần tử tồn tại trước khi thao tác
+    if (document.getElementById('btn-random')) {
+        document.getElementById('btn-random').addEventListener('click', function() {
+            isRandom = !isRandom;
+            this.classList.toggle('active', isRandom);
+        });
+    }
 
     if (audio) {
         audio.onended = () => {
@@ -29,76 +32,81 @@ document.addEventListener('DOMContentLoaded', function() {
                 do {
                     next = Math.floor(Math.random() * tracks.length);
                 } while (tracks.length > 1 && next === current);
-                playTrack(next);
+                window.playTrack(next);
             } else {
                 playNext();
             }
             playPauseButton.textContent = '▶';
             visualizer.classList.remove('active');
         };
+
+        audio.ontimeupdate = () => {
+            if (audio.duration && !isNaN(audio.duration)) {
+                barProgress.value = audio.currentTime / audio.duration;
+                barTime.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+            } else {    
+                barProgress.value = 0;
+                barTime.textContent = formatTime(0) + ' / ' + formatTime(0);
+            }
+        };
     }
 
-    // Hàm phát nhạc
-    function playTrack(index) {
+    // Định nghĩa playTrack ở global scope
+    window.playTrack = function(index) {
+        if (!audio || !tracks[index]) return;
         current = index;
         audio.src = tracks[index];
         audio.play().catch(error => console.error('Error playing audio:', error));
-        barCover.src = musics[index].cover_image ? 'admin/' + musics[index].cover_image : 'https://via.placeholder.com/150';
-        musicBar.classList.add('active');
-        visualizer.classList.add('active');
-        startBeatAnimation(musics[index].bpm || 120);
-        playPauseButton.textContent = '❚❚';
-        initVisualizer(musics[index].bpm || 120);
-    }
+        if (barCover && musics[index]) {
+            barCover.src = musics[index].cover_image ? 'admin/' + musics[index].cover_image : 'https://via.placeholder.com/150';
+        }
+        if (musicBar) musicBar.classList.add('active');
+        if (visualizer) visualizer.classList.add('active');
+        if (musics[index]) startBeatAnimation(musics[index].bpm || 120);
+        if (playPauseButton) playPauseButton.textContent = '❚❚';
+        if (musics[index]) initVisualizer(musics[index].bpm || 120);
+    };
 
     function playPause() {
+        if (!audio) return;
         if (audio.paused) {
             audio.play().catch(error => console.error('Error playing audio:', error));
-            visualizer.classList.add('active');
-            startBeatAnimation(musics[current].bpm || 120);
-            playPauseButton.textContent = '❚❚';
+            if (visualizer) visualizer.classList.add('active');
+            if (musics[current]) startBeatAnimation(musics[current].bpm || 120);
+            if (playPauseButton) playPauseButton.textContent = '❚❚';
         } else {
             audio.pause();
             stopBeatAnimation();
-            visualizer.classList.remove('active');
-            playPauseButton.textContent = '▶';
+            if (visualizer) visualizer.classList.remove('active');
+            if (playPauseButton) playPauseButton.textContent = '▶';
         }
     }
 
     function playPrevious() {
-        if (current > 0) playTrack(current - 1);
-        else if (current === 0) playTrack(tracks.length - 1);
+        if (current > 0) window.playTrack(current - 1);
+        else if (current === 0) window.playTrack(tracks.length - 1);
     }
 
     function playNext() {
-        if (current + 1 < tracks.length) playTrack(current + 1);
-        else playTrack(0);
+        if (current + 1 < tracks.length) window.playTrack(current + 1);
+        else window.playTrack(0);
     }
-
-    audio.ontimeupdate = () => {
-        if (audio.duration && !isNaN(audio.duration)) {
-            barProgress.value = audio.currentTime / audio.duration;
-            barTime.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
-        } else {    
-            barProgress.value = 0;
-            barTime.textContent = formatTime(0) + ' / ' + formatTime(0);
-        }
-    };
 
     function formatTime(s) {
         const m = Math.floor(s/60), sec = Math.floor(s%60);
         return `${m}:${sec<10?'0':''}${sec}`;
     }
 
-    function toggleDropdown(btn, id) {
+    window.toggleDropdown = function(btn, id) {
         const dd = document.getElementById('dropdown-'+id);
+        if (!dd) return;
         dd.classList.toggle('active');
         document.addEventListener('click', e => {
             if (!btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('active');
         }, { once: true });
-    }
+    };
 
-    function openPlaylistModal(pid) {
+    window.openPlaylistModal = function(pid) {
         fetch(`get_playlist.php?playlist_id=${pid}`)
             .then(r => r.json())
             .then(data => {
@@ -114,11 +122,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('playlist-modal').style.display='flex';
             })
             .catch(console.error);
-    }
+    };
 
-    function closePlaylistModal() {
+    window.closePlaylistModal = function() {
         document.getElementById('playlist-modal').style.display='none';
-    }
+    };
 
     // Hàm animation xoay giống FNF theo BPM
     function startBeatAnimation(bpm) {
@@ -131,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const timeSinceLastBeat = currentTime - lastBeat;
             const progress = timeSinceLastBeat / beatInterval;
             const angle = direction * 10 * Math.sin(progress * Math.PI);
-            barCover.style.transform = `rotate(${angle}deg)`;
+            if (barCover) barCover.style.transform = `rotate(${angle}deg)`;
 
             animationFrameId = requestAnimationFrame(animate);
             if (timeSinceLastBeat >= beatInterval) {
@@ -146,12 +154,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
-            barCover.style.transform = 'rotate(0deg)';
+            if (barCover) barCover.style.transform = 'rotate(0deg)';
         }
     }
 
     // Khởi tạo và vẽ visualizer sóng biển với nhiều lớp
     function initVisualizer(bpm) {
+        if (!canvas || !ctx) return;
         // Tăng độ phân giải canvas cho màn hình retina
         const dpr = window.devicePixelRatio || 1;
         canvas.width = canvas.offsetWidth * dpr;
@@ -171,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function draw() {
             requestAnimationFrame(draw);
-            if (!visualizer.classList.contains('active')) return;
+            if (!visualizer || !visualizer.classList.contains('active')) return;
 
             analyser.getByteFrequencyData(dataArray);
 
@@ -208,17 +217,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Thêm sự kiện cho volume control
-    volumeControl.addEventListener('input', () => {
-        if (audio) audio.volume = volumeControl.value;
-    });
+    if (volumeControl) {
+        volumeControl.addEventListener('input', () => {
+            if (audio) audio.volume = volumeControl.value;
+        });
+    }
 
     // Thêm sự kiện tua nhạc bằng thanh progress
-    barProgress.addEventListener('click', (e) => {
-        const rect = barProgress.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        if (audio.duration) {
-            audio.currentTime = percent * audio.duration;
-        }
-    });
+    if (barProgress) {
+        barProgress.addEventListener('click', (e) => {
+            const rect = barProgress.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            if (audio && audio.duration) {
+                audio.currentTime = percent * audio.duration;
+            }
+        });
+    }
 });
 
