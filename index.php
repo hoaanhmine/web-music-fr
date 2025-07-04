@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Chuẩn bị danh sách đường dẫn nhạc
 $tracks = [];
 foreach ($musics as $music) {
-    $tracks[] = 'admin/upload/' . basename(dirname($music['file_path'])) . '/' . basename($music['file_path']);
+    $tracks[] = 'admin/' . $music['file_path']; // Thêm tiền tố 'admin/' để khớp đường dẫn
 }
 ?>
 <!DOCTYPE html>

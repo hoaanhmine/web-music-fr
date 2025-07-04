@@ -1,16 +1,23 @@
-// Định nghĩa các hàm global trước
+// Định nghĩa các biến và hàm global trước
+let current = 0;
+let isRandom = false;
+
 window.playTrack = function(index) {
     if (!window.audio || !window.tracks[index]) return;
     window.current = index;
     window.audio.src = window.tracks[index];
-    window.audio.play().catch(error => console.error('Error playing audio:', error));
+    window.audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        if (window.playPauseButton) window.playPauseButton.textContent = '▶';
+        if (window.visualizer) window.visualizer.classList.remove('active');
+    });
     if (window.barCover && window.musics[index]) {
-        window.barCover.src = window.musics[index].cover_image ? 'admin/' + window.musics[index].cover_image : 'https://via.placeholder.com/150';
+        window.barCover.src = window.musics[index].cover_image ? 'admin/' . window.musics[index].cover_image : 'https://via.placeholder.com/150';
     }
     if (window.musicBar) window.musicBar.classList.add('active');
     if (window.visualizer) {
         window.visualizer.classList.add('active');
-        if (window.musics[index]) initVisualizer(window.musics[index].bpm || 120); // Đảm bảo khởi tạo visualizer
+        if (window.musics[index]) window.initVisualizer(window.musics[index].bpm || 120); // Gọi global
     }
     if (window.playPauseButton) window.playPauseButton.textContent = '❚❚';
 };
@@ -54,8 +61,6 @@ window.editPlaylist = function(id, name) {
 
 // Định nghĩa các hàm khác sau khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', function() {
-    let current = 0;
-    let isRandom = false;
     let animationFrameId = null;
 
     window.audio = document.getElementById('audio-player');
@@ -70,105 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = window.canvas ? window.canvas.getContext('2d') : null;
     const btnRandom = document.getElementById('btn-random');
 
-    // Đảm bảo các phần tử tồn tại trước khi thao tác
-    if (btnRandom) {
-        btnRandom.addEventListener('click', function() {
-            isRandom = !isRandom;
-            this.classList.toggle('active', isRandom);
-        });
-    }
-
-    if (window.audio) {
-        window.audio.onended = () => {
-            if (isRandom) {
-                let next;
-                do {
-                    next = Math.floor(Math.random() * window.tracks.length);
-                } while (window.tracks.length > 1 && next === current);
-                window.playTrack(next);
-            } else {
-                playNext();
-            }
-            if (window.playPauseButton) window.playPauseButton.textContent = '▶';
-            if (window.visualizer) window.visualizer.classList.remove('active');
-        };
-
-        window.audio.ontimeupdate = () => {
-            if (window.audio.duration && !isNaN(window.audio.duration)) {
-                if (window.barProgress) window.barProgress.value = window.audio.currentTime / window.audio.duration;
-                if (window.barTime) window.barTime.textContent = formatTime(window.audio.currentTime) + ' / ' + formatTime(window.audio.duration);
-            } else {
-                if (window.barProgress) window.barProgress.value = 0;
-                if (window.barTime) window.barTime.textContent = formatTime(0) + ' / ' + formatTime(0);
-            }
-        };
-    }
-
-    function playPause() {
-        if (!window.audio) return;
-        if (window.audio.paused) {
-            window.audio.play().catch(error => console.error('Error playing audio:', error));
-            if (window.visualizer) {
-                window.visualizer.classList.add('active');
-                if (window.musics[current]) initVisualizer(window.musics[current].bpm || 120); // Khởi tạo lại nếu cần
-            }
-            if (window.musics[current]) startBeatAnimation(window.musics[current].bpm || 120);
-            if (window.playPauseButton) window.playPauseButton.textContent = '❚❚';
-        } else {
-            window.audio.pause();
-            stopBeatAnimation();
-            if (window.visualizer) window.visualizer.classList.remove('active');
-            if (window.playPauseButton) window.playPauseButton.textContent = '▶';
-        }
-    }
-
-    function playPrevious() {
-        if (current > 0) window.playTrack(current - 1);
-        else if (current === 0) window.playTrack(window.tracks.length - 1);
-    }
-
-    function playNext() {
-        if (current + 1 < window.tracks.length) window.playTrack(current + 1);
-        else window.playTrack(0);
-    }
-
-    function formatTime(s) {
-        const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-        return `${m}:${sec < 10 ? '0' : ''}${sec}`;
-    }
-
-    // Hàm animation xoay giống FNF theo BPM
-    function startBeatAnimation(bpm) {
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        const beatInterval = 60000 / bpm;
-        let lastBeat = performance.now();
-        let direction = 1;
-
-        function animate(currentTime) {
-            const timeSinceLastBeat = currentTime - lastBeat;
-            const progress = timeSinceLastBeat / beatInterval;
-            const angle = direction * 10 * Math.sin(progress * Math.PI);
-            if (window.barCover) window.barCover.style.transform = `rotate(${angle}deg)`;
-
-            animationFrameId = requestAnimationFrame(animate);
-            if (timeSinceLastBeat >= beatInterval) {
-                lastBeat = currentTime;
-                direction *= -1;
-            }
-        }
-        animationFrameId = requestAnimationFrame(animate);
-    }
-
-    function stopBeatAnimation() {
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-            if (window.barCover) window.barCover.style.transform = 'rotate(0deg)';
-        }
-    }
-
-    // Khởi tạo và vẽ visualizer
-    function initVisualizer(bpm) {
+    // Định nghĩa initVisualizer ở phạm vi global
+    window.initVisualizer = function(bpm) {
         if (!window.canvas || !ctx) {
             console.error('Canvas or context not available');
             return;
@@ -223,6 +131,119 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         draw();
+    };
+
+    // Đảm bảo các phần tử tồn tại trước khi thao tác
+    if (btnRandom) {
+        btnRandom.addEventListener('click', function() {
+            isRandom = !isRandom;
+            this.classList.toggle('active', isRandom);
+            this.title = isRandom ? 'Tắt phát ngẫu nhiên' : 'Phát ngẫu nhiên';
+            if (isRandom) {
+                this.style.backgroundColor = '#1ed760';
+            } else {
+                this.style.backgroundColor = '';
+            }
+        });
+    }
+
+    if (window.audio) {
+        window.audio.onended = () => {
+            if (isRandom) {
+                let next;
+                do {
+                    next = Math.floor(Math.random() * window.tracks.length);
+                } while (window.tracks.length > 1 && next === current);
+                window.playTrack(next);
+            } else {
+                playNext();
+            }
+            if (window.playPauseButton) window.playPauseButton.textContent = '▶';
+            if (window.visualizer) window.visualizer.classList.remove('active');
+        };
+
+        window.audio.ontimeupdate = () => {
+            if (window.audio.duration && !isNaN(window.audio.duration)) {
+                if (window.barProgress) window.barProgress.value = window.audio.currentTime / window.audio.duration;
+                if (window.barTime) window.barTime.textContent = formatTime(window.audio.currentTime) + ' / ' + formatTime(window.audio.duration);
+            } else {
+                if (window.barProgress) window.barProgress.value = 0;
+                if (window.barTime) window.barTime.textContent = formatTime(0) + ' / ' + formatTime(0);
+            }
+        };
+    }
+
+    function playPause() {
+        if (!window.audio) return;
+        if (window.audio.paused) {
+            window.audio.play().catch(error => console.error('Error playing audio:', error));
+            if (window.visualizer) {
+                window.visualizer.classList.add('active');
+                if (window.musics[current]) window.initVisualizer(window.musics[current].bpm || 120);
+            }
+            if (window.musics[current]) startBeatAnimation(window.musics[current].bpm || 120);
+            if (window.playPauseButton) window.playPauseButton.textContent = '❚❚';
+        } else {
+            window.audio.pause();
+            stopBeatAnimation();
+            if (window.visualizer) window.visualizer.classList.remove('active');
+            if (window.playPauseButton) window.playPauseButton.textContent = '▶';
+        }
+    }
+
+    function playPrevious() {
+        console.log('playPrevious called, current:', current);
+        if (current > 0) window.playTrack(current - 1);
+        else if (current === 0) window.playTrack(window.tracks.length - 1);
+    }
+
+    function playNext() {
+        console.log('playNext called, current:', current, 'isRandom:', isRandom);
+        if (isRandom) {
+            let next;
+            do {
+                next = Math.floor(Math.random() * window.tracks.length);
+            } while (window.tracks.length > 1 && next === current);
+            window.playTrack(next);
+        } else {
+            if (current + 1 < window.tracks.length) window.playTrack(current + 1);
+            else window.playTrack(0);
+        }
+    }
+
+    function formatTime(s) {
+        const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+        return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // Hàm animation xoay giống FNF theo BPM
+    function startBeatAnimation(bpm) {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        const beatInterval = 60000 / bpm;
+        let lastBeat = performance.now();
+        let direction = 1;
+
+        function animate(currentTime) {
+            const timeSinceLastBeat = currentTime - lastBeat;
+            const progress = timeSinceLastBeat / beatInterval;
+            const angle = direction * 10 * Math.sin(progress * Math.PI);
+            if (window.barCover) window.barCover.style.transform = `rotate(${angle}deg)`;
+
+            animationFrameId = requestAnimationFrame(animate);
+            if (timeSinceLastBeat >= beatInterval) {
+                lastBeat = currentTime;
+                direction *= -1;
+            }
+        }
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function stopBeatAnimation() {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            if (window.barCover) window.barCover.style.transform = 'rotate(0deg)';
+        }
     }
 
     // Thêm sự kiện cho volume control
@@ -252,4 +273,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.play-music-button').forEach((button, index) => {
         button.addEventListener('click', () => window.playTrack(index));
     });
+
+    // Gắn sự kiện cho nút playNext và playPrevious (fallback)
+    const prevButton = document.querySelector('.nav-button[onclick="playPrevious()"]');
+    const nextButton = document.querySelector('.nav-button[onclick="playNext()"]');
+    if (prevButton) prevButton.addEventListener('click', playPrevious);
+    if (nextButton) nextButton.addEventListener('click', playNext);
 });
