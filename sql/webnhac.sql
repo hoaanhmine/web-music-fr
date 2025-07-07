@@ -51,3 +51,4 @@ CREATE TABLE user_favorites (
 -- Thêm sau:
 
 ALTER TABLE musics ADD COLUMN bpm INT DEFAULT 120;
+ALTER TABLE musics ADD COLUMN lyric_path VARCHAR(255) NULL;
